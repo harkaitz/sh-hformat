@@ -27,7 +27,6 @@
 #h: Usage: $0 [DEVICES...]
 #h:
 #h: -l            : List removable storage devices.
-#h: -i            : Install file system formating tools.
 #h: -f zero       : Zero the device.
 #h: -f udf|ext3   : Format using UDF.
 #h: -f f2fs       : Format using F2FS file system. (Requires mkfs.f2fs from f2fs-tools)

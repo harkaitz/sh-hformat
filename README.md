@@ -2,6 +2,10 @@
 
 A wrapper around Linux disk formatting tools with sane parameters.
 
+## Dependencies
+
+- [sh-hutil](https://github.com/harkaitz/sh-hutil) Shell utilities.
+
 ## Help
 
 hformat
@@ -9,7 +13,6 @@ hformat
     Usage: hformat [DEVICES...]
     
     -l            : List removable storage devices.
-    -i            : Install file system formating tools.
     -f zero       : Zero the device.
     -f udf|ext3   : Format using UDF.
     -f f2fs       : Format using F2FS file system. (Requires mkfs.f2fs from f2fs-tools)
