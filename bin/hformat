@@ -34,6 +34,8 @@
 #h: -n NAME       : Name for the partition.
 #h: -F            : Run fast formatting. (No zeroing and bad block checks)
 ##:
+#D: hutil
+##:
 . hlog
 . hterm
 . hpkg
@@ -62,7 +64,7 @@ hformat() {
             return 1
         fi
         for f in ${formats};do
-            hformat_format_"${f}" "${device}" "${name:-`hrand random 8`}"
+            hformat_format_"${f}" "${device}" "${name:-`hrand 8`}"
         done
     done
 }
@@ -88,7 +90,7 @@ hformat_format_zero() { # DRIVE
     vrun sync
 }
 hformat_format_udf() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand random 8`}"
+    local device="${1}" name="${2:-`hrand 8`}"
     test -e "$device" \
         || hlog fatal "File '$device' does not exist."
     test -n "`echo "$1" | grep -e '/dev/sd[abcd]$' -e '/dev/.*[0-9]$'`" \
@@ -101,26 +103,26 @@ hformat_format_udf() { # DRIVE [NAME]
     vrun sync
 }
 hformat_format_ext3() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand random 8`}"
+    local device="${1}" name="${2:-`hrand 8`}"
     test -e "${device}" || hlog fatal "File '${device}' does not exist."
     vrun sudo mke2fs -t "ext3" -L "${name}" -M "/mnt/${name}" "${device}"
     vrun sync
 }
 hformat_format_ntfs() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand random 8`}"
+    local device="${1}" name="${2:-`hrand 8`}"
     test -e "${device}" || hlog fatal "File '${device}' does not exist."
     vrun sudo mkntfs -f -L "${name}" "${device}"
     vrun sync
 }
 hformat_format_fat32() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand random 8`}"
+    local device="${1}" name="${2:-`hrand 8`}"
     test -e "${device}" || hlog fatal "File '${device}' does not exist."
     local name="`echo "${name}" | tr '[:lower:]' '[:upper:]'`"
     vrun sudo mkfs.fat -F 32 -n "${name}" "${device}"
     vrun sync
 }
 hformat_format_f2fs() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand random 8`}"
+    local device="${1}" name="${2:-`hrand 8`}"
     test -e "${device}" || hlog fatal "File '${device}' does not exist."
     local name="`echo "${name}" | tr '[:lower:]' '[:upper:]'`"
     vrun sudo mkfs.f2fs -f -l "${name}" "${device}"

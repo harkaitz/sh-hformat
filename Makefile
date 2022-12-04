@@ -7,6 +7,9 @@ install:
 install: install-sh
 install-sh:
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
+	@echo 'I bin/ask-block-device'; cp bin/ask-block-device $(DESTDIR)$(PREFIX)/bin
+	@echo 'I bin/dd-burn'   ; cp bin/dd-burn     $(DESTDIR)$(PREFIX)/bin
+	@echo 'I bin/liso'      ; cp bin/liso        $(DESTDIR)$(PREFIX)/bin
 	@echo 'I bin/hformat'   ; cp bin/hformat     $(DESTDIR)$(PREFIX)/bin
 ## -- install-sh --
 ## -- license --
