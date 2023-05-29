@@ -7,7 +7,6 @@ install:
 install: install-sh
 install-sh:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp bin/ask-block-device $(DESTDIR)$(PREFIX)/bin
 	cp bin/dd-burn          $(DESTDIR)$(PREFIX)/bin
 	cp bin/liso             $(DESTDIR)$(PREFIX)/bin
 	cp bin/hformat          $(DESTDIR)$(PREFIX)/bin

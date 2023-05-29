@@ -14,10 +14,6 @@ utilities for burning installation CDs, SD cards and pendrives.
 
 ## Help
 
-ask-block-device
-
-    Usage: ask-block-device DEVICE : Ask user for a block device.
-
 dd-burn
 
     Usage: dd-burn IMG[.xz] DEV
@@ -38,11 +34,13 @@ hformat
 
 liso
 
-    Usage: liso  ISO DRIVE
+    Usage: liso [-m] ISO DRIVE
     
     This program first formats the DRIVE to FAT32 and then
     extracts a GNU/Linux installation iso image to it. This
     method will only work with EFI boot.
+    
+    With `-m` you will create partitions manually.
 
 ## Collaborating
 
@@ -51,4 +49,3 @@ one of the following links:
 
 1. [gemini://harkadev.com/oss/](gemini://harkadev.com/oss/)
 2. [https://harkadev.com/oss/](https://harkadev.com/oss/)
-
