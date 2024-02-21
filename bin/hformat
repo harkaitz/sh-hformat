@@ -10,13 +10,9 @@
 #h: -n NAME       : Name for the partition.
 #h: -F            : Run fast formatting. (No zeroing and bad block checks)
 ##:
-#D: hutil
-##:
 . hlog
-. hterm
 . hpkg
 . vrun
-. hrand
 . hmain
 hformat() {
     ## Parse command line arguments.
@@ -35,9 +31,6 @@ hformat() {
     for device in "$@"; do
         if test ! -e "${device}"; then
             hlog error "File '${device}' does not exist."
-            return 1
-        fi
-        if ! hterm stop "All data in $device will be removed.";then
             return 1
         fi
         for f in ${formats};do
@@ -104,6 +97,17 @@ hformat_format_f2fs() { # DRIVE [NAME]
     local name="`echo "${name}" | tr '[:lower:]' '[:upper:]'`"
     vrun sudo mkfs.f2fs -f -l "${name}" "${device}"
     vrun sync
+}
+## -------------------------------------------------------------------
+hrand() {
+    if which md5 >/dev/null 2>&1; then
+        head -n 10 /dev/urandom | md5    | head -c "${1:-100}"
+    elif which md5sum >/dev/null 2>&1; then
+        head -n 10 /dev/urandom | md5sum | head -c "${1:-100}" | sed 's| .*$||'
+    else
+        echo "${SCRNAME}: error: MD5SUM not supported." >&2
+        return 1
+    fi
 }
 ## -------------------------------------------------------------------
 hformat_calc_variables
