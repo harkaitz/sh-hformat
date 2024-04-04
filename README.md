@@ -1,4 +1,4 @@
-# SH-HFORMAT
+# HFORMAT
 
 A wrapper around Linux disk formatting tools with sane parameters. And
 utilities for burning installation CDs, SD cards and pendrives.
@@ -7,10 +7,10 @@ utilities for burning installation CDs, SD cards and pendrives.
 
 - *dd* : GNU Coreutils - dd.
 - *base64*
-- [sh-hutil](https://github.com/harkaitz/sh-hutil) : Shell utilities
 - *sh* : A POSIX shell and base utilities.
 - *xzcat*
 - *zcat*
+- GNU/Linux.
 
 ## Help
 

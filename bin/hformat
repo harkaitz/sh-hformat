@@ -10,108 +10,119 @@
 #h: -n NAME       : Name for the partition.
 #h: -F            : Run fast formatting. (No zeroing and bad block checks)
 ##:
-. hlog
-. hpkg
-. vrun
-. hmain
 hformat() {
+    local OPTIND optopt f formats="" name=
+    
     ## Parse command line arguments.
-    local OPTIND optopt= ops= formats="" f= name=
-    while getopts "ilf:n:F" optopt;do # OPTARG
+    while getopts "lf:n:F" optopt; do
         case $optopt in
-            i)  hformat_install_software ;;
             l)  hformat_list_drives      ;;
-	    F)  HFORMAT_FAST=1           ;;
-            n)  local name="${OPTARG}"   ;;
-            f)  local formats="${formats} ${OPTARG}";;
+            F)  HFORMAT_FAST=1           ;;
+            n)  name="${OPTARG}"   ;;
+            f)  formats="${formats} ${OPTARG}";;
             \?) return 1;;
         esac
     done
     shift $(( $OPTIND - 1 ))
+    
+    ## Format devices.
     for device in "$@"; do
         if test ! -e "${device}"; then
-            hlog error "File '${device}' does not exist."
+            echo >&2 "error: File '${device}' does not exist."
             return 1
         fi
         for f in ${formats};do
-            hformat_format_"${f}" "${device}" "${name:-`hrand 8`}"
+            hformat_format_"${f}" "${device}" "${name:-$(hformat_rname)}"
         done
     done
 }
-hformat_calc_variables() {
-    HFORMAT_FAST=
-}
 ## -------------------------------------------------------------------
-hformat_install_software() {
-    if ! hpkg -w "mkudffs" -i %dpkg "udftools" %rpm "udftools";then
-        hlog error "Do not know how to install 'udftools' in this machine."
-    fi
-    if ! hpkg -w "mkntfs" -i %pacman extra/ntfs-3g;then
-        hlog error "Do not know how to install 'mkntfs' in this machine."
-    fi
-}
 hformat_list_drives() {
     ls -lh /dev/disk/by-id/ | sed 's|../../|/dev/|g' | sed '\|/dev/nvme|d'
 }
 hformat_format_zero() { # DRIVE
     local device="${1}"
-    test -e "$device" || hlog fatal "File '$device' does not exist."
-    vrun sudo dd if="/dev/zero" of="${device}" bs=1M
-    vrun sync
+    hformat_require_device "${device}"
+    hformat_vrun dd if="/dev/zero" of="${device}" bs=1M
+    hformat_vrun sync
 }
 hformat_format_udf() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand 8`}"
-    test -e "$device" \
-        || hlog fatal "File '$device' does not exist."
-    test -n "`echo "$1" | grep -e '/dev/sd[abcd]$' -e '/dev/.*[0-9]$'`" \
-        || hlog fatal "You can only format with UDF entire disks."
-    vrun sudo dd if="/dev/zero" of='${device}' bs=1M count=1
-    vrun sudo mkudffs --utf8                          \
-          --media-type=hd --blocksize=512             \
-          --lvid="$name" --vid="$name" --fsid="$name" \
-          --udfrev=0x0102 "$device"
-    vrun sync
+    local device="${1}" name="${2:-$(hformat_rname)}"
+    hformat_require_device "${device}"
+    hformat_require_entire_disk "${device}"
+    hformat_vrun dd if="/dev/zero" of='${device}' bs=1M count=1
+    hformat_vrun mkudffs --utf8                               \
+                 --media-type=hd --blocksize=512                   \
+                 --lvid="${name}" --vid="${name}" --fsid="${name}" \
+                 --udfrev=0x0102 "${device}"
+    hformat_vrun sync
 }
 hformat_format_ext3() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand 8`}"
-    test -e "${device}" || hlog fatal "File '${device}' does not exist."
-    vrun sudo mke2fs -t "ext3" -L "${name}" -M "/mnt/${name}" "${device}"
-    vrun sync
+    local device="${1}" name="${2:-$(hformat_rname)}"
+    hformat_require_device "${device}"
+    hformat_vrun mke2fs -t "ext3" -L "${name}" -M "/mnt/${name}" "${device}"
+    hformat_vrun sync
 }
 hformat_format_ntfs() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand 8`}"
-    test -e "${device}" || hlog fatal "File '${device}' does not exist."
-    vrun sudo mkntfs -f -L "${name}" "${device}"
-    vrun sync
+    local device="${1}" name="${2:-$(hformat_rname)}"
+    hformat_require_device "${device}"
+    hformat_vrun mkntfs -f -L "${name}" "${device}"
+    hformat_vrun sync
 }
 hformat_format_fat32() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand 8`}"
-    test -e "${device}" || hlog fatal "File '${device}' does not exist."
-    local name="`echo "${name}" | tr '[:lower:]' '[:upper:]'`"
-    vrun sudo mkfs.fat -F 32 -n "${name}" "${device}"
-    vrun sync
+    local device="${1}" name="${2:-$(hformat_rname)}"
+    hformat_require_device "${device}"
+    name="$(echo "${name}" | tr '[:lower:]' '[:upper:]')"
+    hformat_vrun mkfs.fat -F 32 -n "${name}" "${device}"
+    hformat_vrun sync
 }
 hformat_format_f2fs() { # DRIVE [NAME]
-    local device="${1}" name="${2:-`hrand 8`}"
-    test -e "${device}" || hlog fatal "File '${device}' does not exist."
-    local name="`echo "${name}" | tr '[:lower:]' '[:upper:]'`"
-    vrun sudo mkfs.f2fs -f -l "${name}" "${device}"
-    vrun sync
+    local device="${1}" name="${2:-$(hformat_rname)}"
+    hformat_require_device "${device}"
+    name="$(echo "${name}" | tr '[:lower:]' '[:upper:]')"
+    hformat_vrun mkfs.f2fs -f -l "${name}" "${device}"
+    hformat_vrun sync
 }
 ## -------------------------------------------------------------------
-hrand() {
+hformat_vrun() {
+    echo >&2 "$*"
+    "$@"
+}
+hformat_rname() {
     if which md5 >/dev/null 2>&1; then
-        head -n 10 /dev/urandom | md5    | head -c "${1:-100}"
+        head -c 10 /dev/urandom | md5    | head -c 8
     elif which md5sum >/dev/null 2>&1; then
-        head -n 10 /dev/urandom | md5sum | head -c "${1:-100}" | sed 's| .*$||'
+        head -c 10 /dev/urandom | md5sum | head -c 8
     else
-        echo "${SCRNAME}: error: MD5SUM not supported." >&2
+        echo "error: MD5SUM not supported." >&2
+        return 1
+    fi
+}
+hformat_require_device() {
+    if test ! -e "${1}"; then
+        echo >&2 "error: ${1}: The file does not exist."
+        return 1
+    fi
+    if test ! -w "${1}"; then
+        echo >&2 "error: ${1}: No permissions to write."
+        return 1
+    fi
+}
+hformat_require_entire_disk() {
+    if test ! -n "$(echo "$1" | grep -e '/dev/sd[abcd]$' -e '/dev/.*[0-9]$')"; then
+        echo >&2 "error: You can only format with UDF entire disks."
         return 1
     fi
 }
 ## -------------------------------------------------------------------
-hformat_calc_variables
-hmain -f "hformat" hformat "$@"
+HFORMAT_FAST=
+if test @"${SCRNAME:-$(basename "$0")}" = @"hformat"; then
+    case "${1}" in
+        ''|-h|--help) sed -n 's/^ *#h: \{0,1\}//p' "$0";;
+        *)            hformat "$@"; exit 0;;
+    esac
+fi
+
 
 
 
