@@ -11,7 +11,7 @@
 #D: base64, GNUdd
 ##:
 liso() {
-    local OPTIND optopt opt_m=''
+    local OPTIND=1 optopt opt_m=''
     ## Parse command line arguments.
     while getopts "m" optopt; do # OPTARG
         case $optopt in
@@ -95,7 +95,7 @@ liso() {
 ## -------------------------------------------------------------------
 liso_info()  { echo "$*";            }
 liso_error() { echo "error: $*" >&2; }
-if test @"$(basename "$0")" = @"liso"; then
+if test @"${SCRNAME:-$(basename "$0")}" = @"liso"; then
     case "${1}" in
         ''|-h|--help) sed -n 's/^ *#h: \{0,1\}//p' "$0" ;;
         *)            liso "$@"; exit 0;;

@@ -11,7 +11,7 @@
 #h: -F            : Run fast formatting. (No zeroing and bad block checks)
 ##:
 hformat() {
-    local OPTIND optopt f formats="" name=
+    local OPTIND=1 optopt f formats="" name=
     
     ## Parse command line arguments.
     while getopts "lf:n:F" optopt; do
